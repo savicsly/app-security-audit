@@ -1,5 +1,7 @@
 # App Security Audit
 
+[![npm](https://img.shields.io/npm/v/app-security-audit)](https://www.npmjs.com/package/app-security-audit)
+
 An AI agent skill that audits a web or mobile app's source code for security weaknesses, writes a professional report mapped to the OWASP Top 10:2025, and fixes the problems you approve.
 
 It was built for apps made quickly, often with AI coding tools, where security was not part of the process. It works in Claude Code, Cursor, VS Code with GitHub Copilot, OpenAI Codex, Gemini CLI, Windsurf, OpenCode, and any other tool that supports the open Agent Skills format.
