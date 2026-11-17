@@ -1,0 +1,15 @@
+{
+  "name": "appsec-audit",
+  "owner": {
+    "name": "Victor Bala"
+  },
+  "description": "Security audit skill for web and mobile app codebases.",
+  "plugins": [
+    {
+      "name": "app-security-audit",
+      "source": ".",
+      "description": "Audits web and mobile app code against the OWASP Top 10:2025, writes a professional report, and fixes what you approve.",
+      "category": "security"
+    }
+  ]
+}
