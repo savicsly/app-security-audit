@@ -16,6 +16,7 @@ These apply throughout, and each exists for a reason.
 - **Audit only what the user owns or is authorized to assess.** Work from the code and configuration they give you. Do not send traffic to deployed systems, third-party services, or production databases. If the user asks for live testing of a running app, confirm it is theirs and limit it to a local or staging instance they started for the purpose.
 - **Never reproduce a live secret in full.** When a credential is found, show the first four characters and mask the rest. Reports get pasted into chats, tickets and emails, and a report that leaks the key it found makes things worse.
 - **Evidence or it is not a finding.** Every finding cites a file and line and shows the relevant code. If you suspect a problem but could not confirm it, record it as "Needs verification" with what would confirm it.
+- **The report is sensitive; keep it out of git.** It is a map of exploitable weaknesses. Save it only where git ignores it (Phase 5 gives the steps) and never commit, push or paste it anywhere public.
 - **Read-only until told otherwise.** Phases 1 to 5 change nothing in the codebase. Fixes begin only after the user has seen the report and said which ones to apply.
 - **Say what was not covered.** A static review cannot see runtime behavior, infrastructure outside the repository, or logic that lives in a third-party dashboard. The limitations section is part of the deliverable, because a reader who assumes full coverage will stop looking.
 
@@ -66,9 +67,18 @@ Tools find the mechanical problems cheaply, which frees attention for the logic 
    python3 <skill-dir>/scripts/pattern_scan.py <project-root> --format json > <temp-dir>/pattern_leads.json
    ```
 
-2. Run whichever of these are installed or installable in the environment: a dependency audit for each package manager present, a secret scanner, and a static analyzer. `references/tooling.md` lists them.
+2. Check which tools are available before running any. From `references/tooling.md`, list the tools that apply to this project: a dependency audit for each package manager present, a secret scanner (Gitleaks or TruffleHog), a static analyzer (Semgrep, plus the stack-specific one if there is one), and Trivy or Checkov if there are container or IaC files. Check them all in one pass with `command -v`.
 
-3. If a tool is unavailable, do not stall. Note it in the methodology section as not run and continue.
+3. If any are missing, stop and tell the user before continuing. Do not skip a missing tool without saying so: a gap the user never heard about looks like full coverage. Give them a short table with each missing tool, what it would catch that this audit would otherwise miss, and the install command for their OS (from the install table in `references/tooling.md`). Then ask which of these they want:
+   - **Install now:** you run the install commands, confirm each tool works, and continue. Do this only with the user's yes, because it changes their machine.
+   - **They install them:** wait, then recheck with `command -v`.
+   - **Continue without them:** proceed and record each one as not run.
+
+   If you cannot ask (a non-interactive or headless run), do not install anything. Continue, and make the gap prominent in the report as described in step 5.
+
+4. Run every tool that is now available.
+
+5. For every applicable tool that did not run, the methodology table says "Not run" with the reason (not installed, user declined, no network) and the exact install and run command. The limitations section names the gap and what it leaves unchecked. If the secret scan or static analysis did not run, also add it to "Actions required from you" in the executive summary, so the owner knows to run it and how.
 
 Treat every tool result as a lead to verify, never as a finding. Open the file, read the surrounding code, and decide whether it is reachable and exploitable. Discard false positives silently; keep a count for the methodology section.
 
@@ -98,9 +108,18 @@ Rate severity with the rubric in `references/report-format.md`, considering this
 
 Write the executive summary for a non-technical owner: what could happen to their users and business, in plain words, with no jargon left unexplained. Write the detailed findings for the developer (or the AI assistant) who will fix them: exact location, the vulnerable code, why it is exploitable, and corrected code for this stack.
 
-Default output is a Markdown file named `security-audit-report.md`. If the user asks for Word or PDF, produce that format using the appropriate document skill if one is available.
+The report describes exploitable weaknesses, so it must never reach version control. Never save it to the project root or anywhere git tracks. A report committed and pushed to a public or shared repository gives attackers a map of the app's holes. Before writing it:
 
-Before delivering, check the report against itself: every finding has a location and evidence, no secret appears unmasked, counts in the summary match the findings, each OWASP category in the coverage matrix has a status, and the limitations section reflects what actually happened in this audit.
+1. Save it to `.security-audit/security-audit-report.md` under the project root (other formats go in the same folder), unless the user names another location outside the repository.
+2. If the project is a git repository, add `.security-audit/` to `.git/info/exclude` unless it is already listed. That file is a local-only ignore list: it changes no tracked file, so the audit stays read-only. Do not edit `.gitignore` during the audit.
+3. Verify it with `git check-ignore -q .security-audit/security-audit-report.md`. If this does not succeed (for example because a `.gitignore` rule re-includes the path), save the report outside the repository instead, such as `~/security-audits/<project-name>/`.
+4. When you deliver the report, give its full path and say it is excluded from git on this machine only. Anyone who copies it elsewhere, or a teammate whose clone lacks the exclusion, must keep it out of the repository. Offer to add `.security-audit/` to `.gitignore` as part of Phase 6.
+
+Also check that no earlier audit report is already tracked or sitting unignored in the repository (`git ls-files` and `git status --porcelain` for files such as `*security*audit*report*`). If one is, warn the user straight away; if it was ever pushed, treat its findings as public.
+
+Default output is Markdown. If the user asks for Word or PDF, produce that format using the appropriate document skill if one is available, saved in the same protected folder.
+
+Before delivering, check the report against itself: every finding has a location and evidence, no secret appears unmasked, counts in the summary match the findings, each OWASP category in the coverage matrix has a status, the limitations section reflects what actually happened in this audit, every tool that did not run is listed with its install command, and `git check-ignore` confirms the report file is ignored.
 
 ### Phase 6: Fix
 

@@ -4,7 +4,28 @@ Contents: Approach · Bundled scripts · Dependency audits · Secret scanning ·
 
 ## Approach
 
-Run what is available; do not block on what is not. Check with `command -v <tool>` before use. Installing a tool is fine when the environment allows it and it is quick; otherwise record it as "not run" in the report's methodology table. The bundled scripts need only Python 3 and always run.
+Check every applicable tool up front with `command -v <tool>`, before running any of them. If any are missing, tell the user which ones, what each would catch, and the install command from the table below, and ask whether to install them, have them install them, or continue without them (SKILL.md Phase 3). Install only with the user's agreement. Never drop a missing tool without saying so. Whatever does not run is listed in the report's methodology table as "Not run" with the reason and the install command. The bundled scripts need only Python 3 and always run.
+
+## Installing missing tools
+
+| Tool | What it adds | macOS (Homebrew) | Linux / other |
+|---|---|---|---|
+| Gitleaks | Secrets in files and across all of git history | `brew install gitleaks` | Release binary from github.com/gitleaks/gitleaks, or `go install github.com/zricethezav/gitleaks/v8@latest` |
+| TruffleHog | Secrets in files and history, with many detectors | `brew install trufflehog` | Release binary from github.com/trufflesecurity/trufflehog |
+| Semgrep | Data-flow-aware static analysis for most languages | `brew install semgrep` | `pipx install semgrep` (or `pip install semgrep`) |
+| OSV-Scanner | Dependency advisories for most ecosystems in one tool | `brew install osv-scanner` | `go install github.com/google/osv-scanner/cmd/osv-scanner@latest` |
+| Trivy | Dependencies, secrets and misconfigurations in containers and IaC | `brew install trivy` | Distro package or the install script at aquasecurity.github.io/trivy |
+| pip-audit | Python dependency advisories | `pipx install pip-audit` | `pipx install pip-audit` |
+| Bandit | Python static analysis | `pipx install bandit` | `pipx install bandit` |
+| Brakeman | Rails static analysis | `gem install brakeman` | `gem install brakeman` |
+| bundler-audit | Ruby dependency advisories | `gem install bundler-audit` | `gem install bundler-audit` |
+| gosec | Go static analysis | `brew install gosec` | `go install github.com/securego/gosec/v2/cmd/gosec@latest` |
+| govulncheck | Go dependency advisories, reachability-aware | `go install golang.org/x/vuln/cmd/govulncheck@latest` | same |
+| Checkov | Terraform, CloudFormation, Kubernetes misconfiguration | `pipx install checkov` | `pipx install checkov` |
+
+On Windows, use `winget` or `scoop` where the tool is packaged, or the release binary. Package managers' own audits (`npm audit`, `pnpm audit`, `composer audit`, `dotnet list package --vulnerable`) come with the package manager and need no install.
+
+If several are missing, prioritize: one secret scanner (Gitleaks) and Semgrep give the most coverage for the least effort, and OSV-Scanner covers ecosystems that have no built-in audit command.
 
 Run tools from the project root. Send output to files under a temporary directory outside the project (shown as `/tmp` below; use the system temp folder on Windows) and read those, so large outputs do not flood the context. Never run a tool's auto-fix mode during the audit phases (`npm audit fix`, `--fix` flags): the audit is read-only.
 
@@ -86,4 +107,4 @@ Do not start the application, run migrations, or connect to any real database or
 1. Merge leads from all tools and remove duplicates (same file and line).
 2. For each lead, open the code and decide: confirmed, not exploitable, or needs verification. Check reachability: is the code shipped, is the input user-controlled, is there a control upstream?
 3. Promote confirmed leads into findings with your own description and evidence. Tool output is supporting material for the appendix; it does not go into the findings as-is.
-4. In the methodology section, give one line per tool: version if known, what it scanned, how many leads, how many confirmed, or why it was not run.
+4. In the methodology section, give one line per tool: version if known, what it scanned, how many leads, how many confirmed. For a tool that did not run, give the reason (not installed, user declined, no network), what that leaves unchecked, and the exact install and run commands, so the owner can close the gap.
