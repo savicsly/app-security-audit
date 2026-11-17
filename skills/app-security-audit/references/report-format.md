@@ -119,7 +119,7 @@ Write this section for the specific audit. Include whichever of these are true, 
 - This was a static review of source code at commit `<hash>` (or of the files provided on `<date>`). The running application was not tested.
 - Coverage tier per stack, naming any stack that received generic-tier coverage.
 - Parts not reviewed: for example backend code not provided, database rules held only in a provider dashboard, infrastructure and cloud configuration outside the repository, third-party services, git history when unavailable.
-- Tools that could not be run and why.
+- Tools that could not be run, why, and what that leaves unchecked (for example: "No secret scanner ran, so git history was checked only by filename, not by content"). Point to the recommended follow-up scans table.
 - Large codebases: which areas were read in depth and which were sampled.
 - An audit reduces risk and does not prove the absence of vulnerabilities. For applications handling payments, health data or large volumes of personal data, an independent penetration test by a qualified professional is recommended before launch and after major changes.
 - The audit was AI-assisted; findings should be reviewed by the development team before changes are deployed.

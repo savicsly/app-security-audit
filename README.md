@@ -84,7 +84,9 @@ Restart or reload your tool after installing, open the app you want to check, an
 
 In Claude Code with the plugin installed you can also type `/app-security-audit:app-security-audit`.
 
-You will get `security-audit-report.md`. Then tell the assistant which findings to fix. Nothing in your code is changed until you have seen the report and chosen.
+Before scanning, the assistant checks for the optional scanners (Gitleaks, Semgrep, OSV-Scanner and others, depending on your stack). It tells you which are missing, what each would catch and how to install it, and asks whether to install them or continue without them. Any scan that did not run is listed in the report with its install command.
+
+You will get `.security-audit/security-audit-report.md`. That folder is added to `.git/info/exclude` so the report is never committed: it describes exploitable weaknesses and must stay out of your repository. The exclusion applies only to your local copy, so add `.security-audit/` to `.gitignore` if your team runs audits too. Then tell the assistant which findings to fix. Nothing in your code is changed until you have seen the report and chosen.
 
 For the best results:
 

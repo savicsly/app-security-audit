@@ -57,9 +57,16 @@
 | Check | Tool | Result |
 |---|---|---|
 | Pattern scan | Bundled `pattern_scan.py` | {{n leads, n confirmed}} |
-| Dependency audit | {{npm audit / pip-audit / ...}} | {{n advisories / not run: reason}} |
-| Secret scan | {{Gitleaks / not run: reason}} | {{...}} |
-| Static analysis | {{Semgrep / not run: reason}} | {{...}} |
+| Dependency audit | {{npm audit / pip-audit / ...}} | {{n advisories / Not run: reason}} |
+| Secret scan | {{Gitleaks / TruffleHog}} | {{n leads, n confirmed / Not run: reason}} |
+| Static analysis | {{Semgrep / Bandit / ...}} | {{n leads, n confirmed / Not run: reason}} |
+
+{{Include this block only if any tool did not run.}}
+**Recommended follow-up scans.** These checks did not run in this audit, so the weaknesses they detect were not checked by a tool. Install them and run them, or ask for the audit to be rerun:
+
+| Tool | What it would add | Install | Run |
+|---|---|---|---|
+| {{Gitleaks}} | {{Secrets across all git history}} | `{{brew install gitleaks}}` | `{{gitleaks detect --source . --redact}}` |
 
 ---
 
