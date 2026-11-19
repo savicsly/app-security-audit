@@ -380,6 +380,7 @@ def context_hint(rel: str) -> str:
 
 
 def scan(root: Path, max_per_rule: int):
+    EXCLUDED.clear()
     leads, counts, files_scanned = [], {}, 0
     sql_tables, sql_rls_on, sql_is_supabase = {}, set(), False
     for dirpath, dirnames, filenames in os.walk(root):
@@ -527,7 +528,7 @@ def main():
             "disclaimer": "Leads only. Verify each by reading the code. This scan cannot detect logic flaws such as missing authorization.",
             "files_scanned": files_scanned, "lead_count": len(leads),
             "by_severity_hint": summary,
-            "excluded_paths": EXCLUDED,
+            "excluded_paths": list(EXCLUDED),
             "leads": leads,
         }, indent=2))
         return

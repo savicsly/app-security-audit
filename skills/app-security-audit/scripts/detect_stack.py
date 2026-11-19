@@ -212,6 +212,7 @@ def classify_extras(res: Result, deps):
 
 
 def detect(root: Path) -> dict:
+    EXCLUDED.clear()
     res = Result()
     package_roots = []
     saw = {"php": False, "rb": False, "py": False}
@@ -466,7 +467,7 @@ def detect(root: Path) -> dict:
         "package_roots": sorted(package_roots)[:30],
         "notable_files": res.notable,
         "notes": notes,
-        "excluded_paths": EXCLUDED,
+        "excluded_paths": list(EXCLUDED),
     }
 
 
