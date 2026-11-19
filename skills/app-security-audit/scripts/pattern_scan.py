@@ -30,22 +30,28 @@ SKIP_DIRS = {
 }
 
 
-SKILL_NAME = "app-security-audit"
+SKILL_DIR = Path(__file__).resolve().parent.parent
+EXCLUDED = []  # paths skipped as this skill's own files, reported in the output
 
 
 def _is_own_skill_dir(path: Path) -> bool:
-    """True for an installed copy of this skill (e.g. .claude/skills/app-security-audit).
+    """True only for the copy of this skill that is running this script.
 
     Its scripts and references contain the very patterns being searched for,
-    so scanning them would only add noise to the user's results.
+    so scanning them would only add noise. The match is on the resolved path
+    of this script's own skill folder, never on a folder's name or contents,
+    so a look-alike folder planted in the project is still scanned. Every
+    skipped path is recorded in EXCLUDED and reported.
     """
-    if path.name != SKILL_NAME:
-        return False
     try:
-        head = (path / "SKILL.md").read_text(encoding="utf-8", errors="ignore")[:400]
+        own = path.resolve() == SKILL_DIR
     except OSError:
         return False
-    return re.search(r"^name:\s*" + SKILL_NAME + r"\s*$", head, re.M) is not None
+    if own:
+        EXCLUDED.append(str(path))
+    return own
+
+
 SKIP_FILES = {
     "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "composer.lock",
     "Gemfile.lock", "poetry.lock", "Pipfile.lock", "pubspec.lock",
@@ -520,12 +526,17 @@ def main():
         print(json.dumps({
             "disclaimer": "Leads only. Verify each by reading the code. This scan cannot detect logic flaws such as missing authorization.",
             "files_scanned": files_scanned, "lead_count": len(leads),
-            "by_severity_hint": summary, "leads": leads,
+            "by_severity_hint": summary,
+            "excluded_paths": EXCLUDED,
+            "leads": leads,
         }, indent=2))
         return
 
     print(f"Pattern scan: {files_scanned} files, {len(leads)} leads {summary}")
-    print("Leads only. Verify each by reading the code.\n")
+    print("Leads only. Verify each by reading the code.")
+    for e in EXCLUDED:
+        print(f"Excluded (this skill's own files): {e}")
+    print()
     for l in leads:
         ctx = "" if l["context"] == "application" else f" [{l['context']}]"
         print(f"[{l['severity_hint'].upper():8}] {l['rule']}  {l['file']}:{l['line']}{ctx}")
