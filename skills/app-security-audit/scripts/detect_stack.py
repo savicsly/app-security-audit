@@ -26,22 +26,28 @@ SKIP_DIRS = {
 }
 
 
-SKILL_NAME = "app-security-audit"
+SKILL_DIR = Path(__file__).resolve().parent.parent
+EXCLUDED = []  # paths skipped as this skill's own files, reported in the output
 
 
 def _is_own_skill_dir(path: Path) -> bool:
-    """True for an installed copy of this skill (e.g. .claude/skills/app-security-audit).
+    """True only for the copy of this skill that is running this script.
 
     Its scripts and references contain the very patterns being searched for,
-    so scanning them would only add noise to the user's results.
+    so scanning them would only add noise. The match is on the resolved path
+    of this script's own skill folder, never on a folder's name or contents,
+    so a look-alike folder planted in the project is still scanned. Every
+    skipped path is recorded in EXCLUDED and reported.
     """
-    if path.name != SKILL_NAME:
-        return False
     try:
-        head = (path / "SKILL.md").read_text(encoding="utf-8", errors="ignore")[:400]
+        own = path.resolve() == SKILL_DIR
     except OSError:
         return False
-    return re.search(r"^name:\s*" + SKILL_NAME + r"\s*$", head, re.M) is not None
+    if own:
+        EXCLUDED.append(str(path))
+    return own
+
+
 MAX_FILES = 60000
 
 # (dependency name or prefix, stack id)
@@ -206,6 +212,7 @@ def classify_extras(res: Result, deps):
 
 
 def detect(root: Path) -> dict:
+    EXCLUDED.clear()
     res = Result()
     package_roots = []
     saw = {"php": False, "rb": False, "py": False}
@@ -460,6 +467,7 @@ def detect(root: Path) -> dict:
         "package_roots": sorted(package_roots)[:30],
         "notable_files": res.notable,
         "notes": notes,
+        "excluded_paths": list(EXCLUDED),
     }
 
 
